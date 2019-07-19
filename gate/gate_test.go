@@ -26,10 +26,11 @@ import (
 
 var (
 	implementations = map[string]func() Interface{
-		"cond-based":           newCondBased,
-		"channel-atomic-based": newChannelBasedWithAtomics,
-		"channel-lock-based":   newChannelBasedWithLock,
-		"lock-based":           newLockBased,
+		"cond":             newCondBased,
+		"channel-atomics":  newChannelBasedWithAtomics,
+		"channel-pointers": newChannelBasedWithPointers,
+		"channel-lock":     newChannelBasedWithLock,
+		"lock":             newLockBased,
 	}
 
 	parallelisms = []int{1, 10, 100, 1000}
