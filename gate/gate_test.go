@@ -9,8 +9,10 @@ import (
 
 var (
 	implementations = map[string]func() Interface{
-		"cond-based":    NewCondBased,
-		"channel-based": NewChannelBased,
+		"cond-based":           newCondBased,
+		"channel-atomic-based": newChannelBasedWithAtomics,
+		"channel-lock-based":   newChannelBasedWithLock,
+		"lock-based":           newLockBased,
 	}
 	bg = context.Background()
 )

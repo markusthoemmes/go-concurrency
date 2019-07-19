@@ -5,7 +5,8 @@ import (
 	"sync"
 )
 
-func NewCondBased() Interface {
+// newCondBased returns a gate that is based sync.Cond.
+func newCondBased() Interface {
 	var mux sync.Mutex
 	return &condBased{
 		cond: sync.NewCond(&mux),

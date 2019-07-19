@@ -10,3 +10,7 @@ type Interface interface {
 	// Wait blocks while the gate is closed.
 	Wait(context.Context) error
 }
+
+func New() Interface {
+	return newChannelBasedWithAtomics()
+}
