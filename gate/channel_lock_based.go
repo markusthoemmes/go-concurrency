@@ -41,15 +41,17 @@ type channelBasedWithLock struct {
 	mux sync.RWMutex
 }
 
+// Open implements interface.
 func (c *channelBasedWithLock) Open() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	if c.open == 0 {
-		c.open = 1
 		close(c.broadcast)
+		c.open = 1
 	}
 }
 
+// Close implements interface.
 func (c *channelBasedWithLock) Close() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -59,17 +61,22 @@ func (c *channelBasedWithLock) Close() {
 	}
 }
 
+// Wait implements interface.
 func (c *channelBasedWithLock) Wait(ctx context.Context) error {
-	c.mux.RLock()
-	open := c.open
-	c.mux.RUnlock()
-	if open > 0 {
+	isOpen, broadcast := c.state()
+	if isOpen {
 		return ctx.Err()
 	}
 	select {
-	case <-c.broadcast:
+	case <-broadcast:
 		return ctx.Err()
 	case <-ctx.Done():
 		return ctx.Err()
 	}
+}
+
+func (c *channelBasedWithLock) state() (bool, chan struct{}) {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	return c.open > 0, c.broadcast
 }

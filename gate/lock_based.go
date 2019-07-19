@@ -31,17 +31,33 @@ func newLockBased() Interface {
 }
 
 type lockBased struct {
-	mux sync.RWMutex
+	mux          sync.RWMutex
+	openCloseMux sync.Mutex
+	open         bool
 }
 
+// Open implements interface.
 func (c *lockBased) Open() {
-	c.mux.Unlock()
+	c.openCloseMux.Lock()
+	defer c.openCloseMux.Unlock()
+	if !c.open {
+		c.open = true
+		c.mux.Unlock()
+	}
 }
 
+// Close implements interface.
 func (c *lockBased) Close() {
-	c.mux.Lock()
+	c.openCloseMux.Lock()
+	defer c.openCloseMux.Unlock()
+	if c.open {
+		c.open = false
+		c.mux.Lock()
+	}
 }
 
+// Wait implements Interface.
+// Note that this does not implement aborting of Wait if the context is done.
 func (c *lockBased) Wait(ctx context.Context) error {
 	c.mux.RLock()
 	defer c.mux.RUnlock()

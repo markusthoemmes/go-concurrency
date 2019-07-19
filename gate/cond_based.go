@@ -34,6 +34,7 @@ type condBased struct {
 	open bool
 }
 
+// Open implements Interface.
 func (c *condBased) Open() {
 	c.cond.L.Lock()
 	c.open = true
@@ -41,12 +42,15 @@ func (c *condBased) Open() {
 	c.cond.Broadcast()
 }
 
+// Close implements Interface.
 func (c *condBased) Close() {
 	c.cond.L.Lock()
 	c.open = false
 	c.cond.L.Unlock()
 }
 
+// Wait implements Interface.
+// Note that this does not implement aborting of Wait if the context is done.
 func (c *condBased) Wait(ctx context.Context) error {
 	c.cond.L.Lock()
 	for !c.open {

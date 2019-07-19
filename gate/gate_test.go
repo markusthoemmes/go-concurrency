@@ -41,8 +41,20 @@ func TestGateCorrectness(t *testing.T) {
 	for name, impl := range implementations {
 		t.Run(name, func(t *testing.T) {
 			gate := impl()
-			calls := 100
+			calls := 100000
 			var grp sync.WaitGroup
+
+			go func() {
+				for {
+					gate.Open()
+				}
+			}()
+
+			go func() {
+				for {
+					gate.Close()
+				}
+			}()
 
 			for i := 0; i < calls; i++ {
 				grp.Add(1)
@@ -51,9 +63,6 @@ func TestGateCorrectness(t *testing.T) {
 					grp.Done()
 				}()
 			}
-
-			time.Sleep(10 * time.Millisecond)
-			gate.Open()
 			grp.Wait()
 		})
 	}
@@ -87,9 +96,9 @@ func BenchmarkGateOpenCloseFrequently(b *testing.B) {
 				g := impl()
 				go func() {
 					for {
-						time.Sleep(1 * time.Millisecond)
+						time.Sleep(10 * time.Nanosecond)
 						g.Open()
-						time.Sleep(1 * time.Millisecond)
+						time.Sleep(10 * time.Nanosecond)
 						g.Close()
 					}
 				}()

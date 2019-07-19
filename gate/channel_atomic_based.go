@@ -37,10 +37,12 @@ type channelBasedWithAtomics struct {
 	broadcast chan struct{}
 	open      uint32
 
-	// mux guards Open and Close from being called concurrently.
-	mux sync.Mutex
+	// mux guards Open and Close from being called concurrently. It also
+	// guards broadcast state changes.
+	mux sync.RWMutex
 }
 
+// Open implements interface.
 func (c *channelBasedWithAtomics) Open() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -49,6 +51,7 @@ func (c *channelBasedWithAtomics) Open() {
 	}
 }
 
+// Close implements interface.
 func (c *channelBasedWithAtomics) Close() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -57,14 +60,21 @@ func (c *channelBasedWithAtomics) Close() {
 	}
 }
 
+// Wait implements interface.
 func (c *channelBasedWithAtomics) Wait(ctx context.Context) error {
 	if atomic.LoadUint32(&c.open) > 0 {
 		return ctx.Err()
 	}
 	select {
-	case <-c.broadcast:
+	case <-c.broadcaster():
 		return ctx.Err()
 	case <-ctx.Done():
 		return ctx.Err()
 	}
+}
+
+func (c *channelBasedWithAtomics) broadcaster() chan struct{} {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	return c.broadcast
 }

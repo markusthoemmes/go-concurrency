@@ -27,6 +27,7 @@ type Interface interface {
 	Wait(context.Context) error
 }
 
+// New returns a new gate implementation.
 func New() Interface {
 	return newChannelBasedWithAtomics()
 }
