@@ -28,9 +28,8 @@ import (
 // read from. Once the gate opens again, that channel is closed, notifying
 // all waiters to move on.
 func newChannelBasedWithPointers() Interface {
-	initial := make(chan struct{})
 	return &channelBasedWithPointers{
-		broadcast: unsafe.Pointer(&initial),
+		broadcast: unsafe.Pointer(nil),
 	}
 }
 
@@ -40,6 +39,8 @@ type channelBasedWithPointers struct {
 
 // Open implements interface.
 func (c *channelBasedWithPointers) Open() {
+	// Always try to swap this to nil. If the old pointer is not nil, we know
+	// we can safely close it because only one of those swaps will win.
 	channelPtr := atomic.SwapPointer(&c.broadcast, nil)
 	if channelPtr != nil {
 		channel := *(*chan struct{})(channelPtr)
@@ -56,6 +57,7 @@ func (c *channelBasedWithPointers) Close() {
 // Wait implements interface.
 func (c *channelBasedWithPointers) Wait(ctx context.Context) error {
 	channelPtr := atomic.LoadPointer(&c.broadcast)
+	// No channel means we can execute immediately.
 	if channelPtr == nil {
 		return ctx.Err()
 	}
