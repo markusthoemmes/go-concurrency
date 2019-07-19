@@ -2,6 +2,7 @@ package gate
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -14,6 +15,9 @@ var (
 		"channel-lock-based":   newChannelBasedWithLock,
 		"lock-based":           newLockBased,
 	}
+
+	parallelisms = []int{1, 10, 100, 1000}
+
 	bg = context.Background()
 )
 
@@ -40,38 +44,46 @@ func TestGateCorrectness(t *testing.T) {
 }
 
 func BenchmarkGateOpen(b *testing.B) {
-	for name, impl := range implementations {
-		b.Run(name, func(b *testing.B) {
-			g := impl()
-			g.Open()
+	for implName, impl := range implementations {
+		for _, parallelism := range parallelisms {
+			benchName := fmt.Sprintf("%s-%d", implName, parallelism)
+			b.Run(benchName, func(b *testing.B) {
+				b.SetParallelism(parallelism)
+				g := impl()
+				g.Open()
 
-			b.RunParallel(func(pb *testing.PB) {
-				for pb.Next() {
-					g.Wait(bg)
-				}
+				b.RunParallel(func(pb *testing.PB) {
+					for pb.Next() {
+						g.Wait(bg)
+					}
+				})
 			})
-		})
+		}
 	}
 }
 
 func BenchmarkGateOpenCloseFrequently(b *testing.B) {
-	for name, impl := range implementations {
-		b.Run(name, func(b *testing.B) {
-			g := impl()
-			go func() {
-				for {
-					time.Sleep(1 * time.Millisecond)
-					g.Open()
-					time.Sleep(1 * time.Millisecond)
-					g.Close()
-				}
-			}()
+	for implName, impl := range implementations {
+		for _, parallelism := range parallelisms {
+			benchName := fmt.Sprintf("%s-%d", implName, parallelism)
+			b.Run(benchName, func(b *testing.B) {
+				b.SetParallelism(parallelism)
+				g := impl()
+				go func() {
+					for {
+						time.Sleep(1 * time.Millisecond)
+						g.Open()
+						time.Sleep(1 * time.Millisecond)
+						g.Close()
+					}
+				}()
 
-			b.RunParallel(func(pb *testing.PB) {
-				for pb.Next() {
-					g.Wait(bg)
-				}
+				b.RunParallel(func(pb *testing.PB) {
+					for pb.Next() {
+						g.Wait(bg)
+					}
+				})
 			})
-		})
+		}
 	}
 }

@@ -16,10 +16,22 @@ This benchmark simply checks the "happy" path. It measures the overhead the gate
 goos: darwin
 goarch: amd64
 pkg: github.com/markusthoemmes/go-semaphores/gate
-BenchmarkGateOpen/channel-lock-based-12         	30000000	        41.2 ns/op	       0 B/op	       0 allocs/op
-BenchmarkGateOpen/lock-based-12                 	50000000	        33.7 ns/op	       0 B/op	       0 allocs/op
-BenchmarkGateOpen/cond-based-12                 	20000000	        63.1 ns/op	       0 B/op	       0 allocs/op
-BenchmarkGateOpen/channel-atomic-based-12       	2000000000	         0.74 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpen/cond-based-1-12         	20000000	        62.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpen/cond-based-10-12        	20000000	        65.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpen/cond-based-100-12       	20000000	        72.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpen/cond-based-1000-12      	10000000	       503 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpen/channel-atomic-based-1-12         	2000000000	         0.71 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpen/channel-atomic-based-10-12        	2000000000	         0.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpen/channel-atomic-based-100-12       	2000000000	         0.74 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpen/channel-atomic-based-1000-12      	2000000000	         0.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpen/channel-lock-based-1-12           	30000000	        51.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpen/channel-lock-based-10-12          	30000000	        51.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpen/channel-lock-based-100-12         	30000000	        51.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpen/channel-lock-based-1000-12        	30000000	        52.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpen/lock-based-1-12                   	50000000	        40.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpen/lock-based-10-12                  	30000000	        43.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpen/lock-based-100-12                 	30000000	        44.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpen/lock-based-1000-12                	30000000	        46.6 ns/op	       0 B/op	       0 allocs/op
 PASS
 ```
 
@@ -31,9 +43,21 @@ This benchmark measures what happens if we open and close the gate frequently du
 goos: darwin
 goarch: amd64
 pkg: github.com/markusthoemmes/go-semaphores/gate
-BenchmarkGateOpenCloseFrequently/channel-atomic-based-12         	2000000000	         1.20 ns/op	       0 B/op	       0 allocs/op
-BenchmarkGateOpenCloseFrequently/channel-lock-based-12           	30000000	        58.8 ns/op	       0 B/op	       0 allocs/op
-BenchmarkGateOpenCloseFrequently/lock-based-12                   	30000000	        46.2 ns/op	       0 B/op	       0 allocs/op
-BenchmarkGateOpenCloseFrequently/cond-based-12                   	10000000	       170 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpenCloseFrequently/cond-based-1-12         	10000000	       153 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpenCloseFrequently/cond-based-10-12        	10000000	       160 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpenCloseFrequently/cond-based-100-12       	10000000	       150 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpenCloseFrequently/cond-based-1000-12      	20000000	       190 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpenCloseFrequently/channel-atomic-based-1-12         	2000000000	         2.18 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpenCloseFrequently/channel-atomic-based-10-12        	2000000000	         0.83 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpenCloseFrequently/channel-atomic-based-100-12       	2000000000	         0.85 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpenCloseFrequently/channel-atomic-based-1000-12      	2000000000	         0.91 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpenCloseFrequently/channel-lock-based-1-12           	20000000	        80.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpenCloseFrequently/channel-lock-based-10-12          	20000000	        75.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpenCloseFrequently/channel-lock-based-100-12         	20000000	        65.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpenCloseFrequently/channel-lock-based-1000-12        	20000000	        54.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpenCloseFrequently/lock-based-1-12                   	30000000	        55.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpenCloseFrequently/lock-based-10-12                  	30000000	        47.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpenCloseFrequently/lock-based-100-12                 	30000000	        48.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkGateOpenCloseFrequently/lock-based-1000-12                	30000000	        47.6 ns/op	       0 B/op	       0 allocs/op
 PASS
 ```
