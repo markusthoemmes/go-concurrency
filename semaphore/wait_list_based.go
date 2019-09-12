@@ -14,8 +14,10 @@ func newWaitListBasedSemaphore(capacity int64) Interface {
 type sema struct {
 	capacity int64
 
-	waitersMux   sync.RWMutex
-	waiters      list.List
+	waitersMux sync.RWMutex
+	waiters    list.List
+	// waitersCount keeps the count of entries in the waiters list. We're not using
+	// waiters.Len() to not need to acquire the lock on the hot path of Release.
 	waitersCount int64
 }
 
@@ -87,5 +89,5 @@ func (s *sema) Release() {
 	// Decrement the waitersCount **after** removing it. Worst case is we see
 	// a nil and bail out early.
 	atomic.AddInt64(&s.waitersCount, -1)
-	close(elem.Value.(chan struct{}))
+	close(elem.Value.(chan struct{})) // Informs the waiter to move on.
 }
