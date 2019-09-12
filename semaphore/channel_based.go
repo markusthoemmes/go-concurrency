@@ -4,7 +4,7 @@ import "context"
 
 type semChan chan struct{}
 
-func newSemChan(n int64) semChan {
+func newChannelBased(n int64) Interface {
 	return semChan(make(chan struct{}, n))
 }
 
