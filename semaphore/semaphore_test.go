@@ -10,86 +10,50 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
+)
+
+var (
+	implementations = map[string]func(int64) Interface{
+		"channel":   newChannelBased,
+		"wait-list": newWaitListBasedSemaphore,
+		"cond":      newCondBasedSemaphore,
+	}
+
+	parallelisms = []int{1, 10, 100, 1000}
+
+	bg = context.Background()
 )
 
 func TestSemaphoreCorrectness(t *testing.T) {
-	sem := newWaitListBasedSemaphore(1)
-	sem.Acquire(context.Background())
-	sem.Release()
-}
-
-// acquireN calls Acquire(size) on sem N times and then calls Release(size) N times.
-func acquireN(b *testing.B, sem Interface, N int) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		for j := 0; j < N; j++ {
-			sem.Acquire(context.Background())
-		}
-		for j := 0; j < N; j++ {
+	for implName, impl := range implementations {
+		t.Run(implName, func(t *testing.T) {
+			sem := impl(1)
+			sem.Acquire(bg)
 			sem.Release()
-		}
-	}
-}
-
-// tryAcquireN calls TryAcquire(size) on sem N times and then calls Release(size) N times.
-func tryAcquireN(b *testing.B, sem Interface, N int) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		for j := 0; j < N; j++ {
-			if !sem.TryAcquire() {
-				b.Fatalf("TryAcquire() = false, want true")
-			}
-		}
-		for j := 0; j < N; j++ {
-			sem.Release()
-		}
-	}
-}
-
-func BenchmarkNewSeq(b *testing.B) {
-	for _, cap := range []int64{1, 128} {
-		b.Run(fmt.Sprintf("Weighted-%d", cap), func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				_ = newWaitListBasedSemaphore(cap)
-			}
-		})
-		b.Run(fmt.Sprintf("semChan-%d", cap), func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				_ = newSemChan(cap)
-			}
 		})
 	}
 }
 
-func BenchmarkAcquireSeq(b *testing.B) {
-	for _, c := range []struct {
-		cap, size int64
-		N         int
-	}{
-		{1, 1, 1},
-		{2, 1, 1},
-		{16, 1, 1},
-		{128, 1, 1},
-		{2, 2, 1},
-		{16, 2, 8},
-		{128, 2, 64},
-		{2, 1, 2},
-		{16, 8, 2},
-		{128, 64, 2},
-	} {
-		for _, w := range []struct {
-			name string
-			w    Interface
-		}{
-			{"new", newWaitListBasedSemaphore(c.cap)},
-			{"semChan", newSemChan(c.cap)},
-		} {
-			b.Run(fmt.Sprintf("%s-acquire-%d-%d-%d", w.name, c.cap, c.size, c.N), func(b *testing.B) {
-				acquireN(b, w.w, c.N)
-			})
-			b.Run(fmt.Sprintf("%s-tryAcquire-%d-%d-%d", w.name, c.cap, c.size, c.N), func(b *testing.B) {
-				tryAcquireN(b, w.w, c.N)
-			})
+func BenchmarkSemaphore(b *testing.B) {
+	for implName, impl := range implementations {
+		for _, capacity := range []int64{1, 8, 128} {
+			for _, parallelism := range parallelisms {
+				benchName := fmt.Sprintf("%s-capacity:%d-threads:%d", implName, capacity, parallelism)
+				b.Run(benchName, func(b *testing.B) {
+					b.SetParallelism(parallelism)
+					s := impl(capacity)
+
+					b.RunParallel(func(pb *testing.PB) {
+						for pb.Next() {
+							s.Acquire(bg)
+							// Actually create some contention.
+							time.Sleep(10 * time.Nanosecond)
+							s.Release()
+						}
+					})
+				})
+			}
 		}
 	}
 }
