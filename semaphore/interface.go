@@ -10,3 +10,7 @@ type Interface interface {
 	// Release returns a token.
 	Release()
 }
+
+func New(cap int64) Interface {
+	return newCondBasedSemaphore(cap)
+}
